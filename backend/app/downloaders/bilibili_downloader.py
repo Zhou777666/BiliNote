@@ -6,6 +6,7 @@ from abc import ABC
 from typing import Union, Optional, List
 
 import yt_dlp
+from ffmpeg_helper import with_ffmpeg_location
 
 from app.downloaders.base import Downloader, DownloadQuality, QUALITY_MAP, YDL_RETRY_OPTS
 from app.downloaders.bilibili_dm_patch import apply_bilibili_dm_img_patch
@@ -80,7 +81,7 @@ class BilibiliDownloader(Downloader, ABC):
         if self._cookiefile:
             ydl_opts['cookiefile'] = self._cookiefile
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(with_ffmpeg_location(ydl_opts)) as ydl:
             info = ydl.extract_info(video_url, download=True)
             video_id = info.get("id")
             title = info.get("title")
@@ -134,7 +135,7 @@ class BilibiliDownloader(Downloader, ABC):
         if self._cookiefile:
             ydl_opts['cookiefile'] = self._cookiefile
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(with_ffmpeg_location(ydl_opts)) as ydl:
             info = ydl.extract_info(video_url, download=True)
             video_id = info.get("id")
             video_path = os.path.join(output_dir, f"{video_id}.mp4")
@@ -201,7 +202,7 @@ class BilibiliDownloader(Downloader, ABC):
             ydl_opts['http_headers'] = {'Referer': 'https://www.bilibili.com'}
 
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(with_ffmpeg_location(ydl_opts)) as ydl:
                 info = ydl.extract_info(video_url, download=True)
 
                 # 查找下载的字幕文件

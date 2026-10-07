@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useBackendEvents } from './useBackendEvents'
 import BackendLogPanel from './BackendLogPanel'
+import { readBackendHealth } from './health'
 
 // 健康度判定：
 // - 绿：sidecar running 且 /sys_health 通
@@ -34,11 +35,11 @@ const BackendHealthIndicator = () => {
     async function ping() {
       try {
         const res = await fetch(`${backendBase()}${SYS_HEALTH_PATH}`)
-        const ok = res.ok
+        const health = res.ok ? readBackendHealth(await res.json()) : 'unreachable'
         if (!mounted) return
-        if (ok) {
+        if (health !== 'unreachable') {
           setHealthCheckFailures(0)
-          setLastHealthOk(true)
+          setLastHealthOk(health === 'ok')
         }
         else {
           setHealthCheckFailures(c => c + 1)

@@ -6,6 +6,35 @@
 
 ## 流程总览
 
+### 本 fork 的 Windows 2.4.6 首版
+
+Windows 安装包内置固定版本 9.0.2 的 FFmpeg 和 FFprobe。工具查找顺序为 `FFMPEG_BIN_PATH` 指定目录、安装包 `_internal/tools/ffmpeg`、系统 PATH。已有安装如果指定了系统工具路径，会继续优先使用该配置；希望使用内置版本时清空 `FFMPEG_BIN_PATH`。
+
+构建要求 Python 3.11、Node.js 20、pnpm 9.15.0、Rust 和 Windows MSVC 构建工具。构建脚本只暂存 `.env.example`，不覆盖或删除开发者 `.env`。
+
+```powershell
+python -m pip install -r backend/requirements.txt
+python -m pip install pytest
+python -m pytest backend/tests/test_ffmpeg_helper.py backend/tests/test_media_tools_integration.py
+python backend/build_backend.py --target x86_64-pc-windows-msvc
+cd BillNote_frontend
+pnpm install --frozen-lockfile
+pnpm test:health
+pnpm tauri build --bundles nsis
+```
+
+Windows 构建会下载固定 FFmpeg 包、校验 SHA256，并在移除系统工具 PATH 的环境里对打包后的后端执行自检，验证内置 FFprobe、MP3 转码、截图及中文/空格文件名。`workflow_dispatch` 可先构建测试产物，推送 `v*` tag 会触发现有 Release 流程。
+
+在仓库根目录执行安装（先退出正在运行的 BiliNote）：
+
+```powershell
+./scripts/install-windows.ps1 -Installer './BillNote_frontend/src-tauri/target/release/bundle/nsis/BiliNote_2.4.6_x64-setup.exe'
+```
+
+默认传入 `/D=E:\Tool\Bilinote`，可用 `-Destination` 覆盖；脚本不自动卸载或清理已有数据。覆盖升级前备份原安装目录中的数据库、`config`、`.env`、笔记和上传文件，首版先在独立测试目录验证升级。
+
+FFmpeg 分发：工具目录保留 Gyan 包的 GPL LICENSE、README 和 `BUILD-SOURCE.json`。对外发布包含 FFmpeg 的二进制时，仍需提供与构建及其依赖对应的源码；通知和链接本身不替代源码分发义务。个人 API Key、Cookie、数据库、`.env` 不应进入 Release。
+
 ```
 develop  ──→  release/X.Y.Z  ──→  PR ─→  master  ──→  打 tag vX.Y.Z
                   │                    │                    │

@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Run before loading the API, databases or model providers; no server is started.
+if __name__ == "__main__" and "--media-self-test" in sys.argv:
+    from media_self_test import run
+    run()
+    raise SystemExit(0)
 from contextlib import asynccontextmanager
 
 import uvicorn

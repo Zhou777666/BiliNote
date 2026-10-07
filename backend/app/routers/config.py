@@ -12,7 +12,7 @@ from app.utils.path_helper import get_model_dir
 from app.services.cookie_manager import CookieConfigManager
 from app.services.transcriber_config_manager import TranscriberConfigManager
 from app.transcriber import model_download_state as dl_state
-from ffmpeg_helper import ensure_ffmpeg_or_raise
+from ffmpeg_helper import get_media_tools_status
 
 logger = get_logger(__name__)
 
@@ -401,11 +401,8 @@ async def sys_health():
     前端 useCheckBackend 用 /sys_check 做存活判定（不依赖外部依赖），
     /sys_health 用来在设置页区分「后端没起」vs「后端起了但 ffmpeg 缺」vs「DB 写不进去」等更细的状态。
     """
-    ffmpeg_status = "ok"
-    try:
-        ensure_ffmpeg_or_raise()
-    except Exception:
-        ffmpeg_status = "missing"
+    ffmpeg_details = get_media_tools_status()
+    ffmpeg_status = ffmpeg_details["status"]
 
     db_status = "ok"
     try:
@@ -437,6 +434,7 @@ async def sys_health():
     return R.success(data={
         "backend": "ok",
         "ffmpeg": ffmpeg_status,
+        "ffmpeg_details": ffmpeg_details,
         "db": db_status,
         "whisper_model": whisper_info,
     })
@@ -499,15 +497,11 @@ async def deploy_status():
         whisper_info = {"model_size": None, "transcriber_type": None, "downloaded": False}
 
     # FFmpeg 状态
-    try:
-        ensure_ffmpeg_or_raise()
-        ffmpeg_ok = True
-    except Exception:
-        ffmpeg_ok = False
+    ffmpeg_details = get_media_tools_status()
 
     return R.success(data={
         "backend": {"status": "running", "port": int(os.getenv("BACKEND_PORT", 8483))},
         "cuda": cuda_info,
         "whisper": whisper_info,
-        "ffmpeg": {"available": ffmpeg_ok},
+        "ffmpeg": ffmpeg_details,
     })

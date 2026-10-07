@@ -1,13 +1,11 @@
 import os
-import subprocess
+from ffmpeg_helper import run_ffmpeg, MediaToolError
 from abc import ABC
 from typing import Optional
 
 from app.downloaders.base import Downloader
 from app.enmus.note_enums import DownloadQuality
 from app.models.audio_model import AudioDownloadResult
-import os
-import subprocess
 
 from app.utils.video_helper import save_cover_to_static
 
@@ -44,14 +42,14 @@ class LocalDownloader(Downloader, ABC):
                 '-y',  # 覆盖
                 output_path
             ]
-            subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            run_ffmpeg(command[1:])
 
             if not os.path.exists(output_path):
                 raise RuntimeError(f"封面图片生成失败: {output_path}")
 
             return output_path
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"提取封面失败: {output_path}") from e
+        except MediaToolError as e:
+            raise RuntimeError(f"提取封面失败: {output_path}；{e}") from e
 
     def convert_to_mp3(self,input_path: str, output_path: str = None) -> str:
         """
@@ -77,14 +75,14 @@ class LocalDownloader(Downloader, ABC):
                 output_path
             ]
 
-            subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            run_ffmpeg(command[1:])
 
             if not os.path.exists(output_path):
                 raise RuntimeError(f"mp3 文件生成失败: {output_path}")
 
             return output_path
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"mp3 文件生成失败: {output_path}") from e
+        except MediaToolError as e:
+            raise RuntimeError(f"mp3 文件生成失败: {output_path}；{e}") from e
     def download_video(self, video_url: str, output_dir: str = None) -> str:
         """
         处理本地文件路径，返回视频文件路径

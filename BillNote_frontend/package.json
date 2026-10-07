@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:health": "node scripts/test-health.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

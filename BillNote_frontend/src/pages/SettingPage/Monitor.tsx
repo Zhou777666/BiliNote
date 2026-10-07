@@ -229,14 +229,13 @@ export default function Monitor() {
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">状态:</span>
                                         <span className={status.ffmpeg.available ? 'font-medium text-green-600' : 'font-medium text-red-600'}>
-                                            {status.ffmpeg.available ? '已安装' : '未安装'}
+                                            {status.ffmpeg.available ? 'FFmpeg / FFprobe 可用' : status.ffmpeg.status === 'missing' ? '工具缺失' : '工具运行异常'}
                                         </span>
                                     </div>
-                                    {!status.ffmpeg.available && (
-                                        <div className="text-xs text-red-500">
-                                            请安装 FFmpeg 并添加到系统 PATH
-                                        </div>
-                                    )}
+                                    {status.ffmpeg.version && <div className="break-all text-xs text-muted-foreground">{status.ffmpeg.version}</div>}
+                                    {status.ffmpeg.path && <div className="break-all text-xs text-muted-foreground">FFmpeg: {status.ffmpeg.path}</div>}
+                                    {status.ffmpeg.ffprobe_path && <div className="break-all text-xs text-muted-foreground">FFprobe: {status.ffmpeg.ffprobe_path}</div>}
+                                    {!status.ffmpeg.available && <div className="whitespace-pre-wrap break-all text-xs text-red-500">{status.ffmpeg.error || '请检查 FFmpeg / FFprobe 安装或 FFMPEG_BIN_PATH 配置'}</div>}
                                 </div>
                             ) : null}
                         </CardContent>

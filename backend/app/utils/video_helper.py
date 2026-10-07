@@ -2,9 +2,9 @@ import shutil
 from pathlib import Path
 
 from dotenv import load_dotenv
-import subprocess
 import os
 import uuid
+from ffmpeg_helper import run_ffmpeg
 load_dotenv()
 api_path = os.getenv("API_BASE_URL", "http://localhost")
 BACKEND_PORT= os.getenv("BACKEND_PORT", 8483)
@@ -33,10 +33,9 @@ def generate_screenshot(video_path: str, output_dir: str, timestamp: int, index:
     ]
 
     print("Running command:", command)
-    result = subprocess.run(command, capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print("ffmpeg failed:", result.stderr)
+    run_ffmpeg(command[1:], timeout=60)
+    if not output_path.is_file() or output_path.stat().st_size == 0:
+        raise RuntimeError(f"截图未生成：{output_path}")
 
     return str(output_path)
 

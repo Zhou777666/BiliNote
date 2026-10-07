@@ -2,6 +2,20 @@
 
 本项目所有重要变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased] - Windows 2.4.6 修复版
+
+### Fixed
+
+- 健康检查不再反复追加 PATH，修复长时间运行后 FFmpeg 突然无法启动的问题。
+- 下载、转码、压缩、截图统一解析 FFmpeg / FFprobe 绝对路径，保留退出码和错误输出，截图失败不再返回无效图片路径。
+- 桌面健康指示器读取接口中的依赖状态，HTTP 200 不再掩盖 FFmpeg 或数据库故障。
+- Windows 打包采用绝对资源路径并保留开发者 .env；构建失败立即退出，内置经 SHA256 验证的 FFmpeg 9.0.2 / FFprobe。
+
+### Added
+
+- 媒体工具路径、版本、故障详情，300 次健康检查回归及离线媒体自检。
+- 安装脚本默认目标 E:\Tool\Bilinote，保留交互式安装向导。
+
 ## [2.4.4] - 2026-06-23
 
 ### Security

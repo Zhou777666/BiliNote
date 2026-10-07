@@ -2,9 +2,8 @@ import base64
 import hashlib
 import os
 import re
-import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import ffmpeg
+from ffmpeg_helper import run_ffmpeg, probe_media, MediaToolError
 from PIL import Image, ImageDraw, ImageFont
 
 from app.utils.logger import get_logger
@@ -62,17 +61,22 @@ class VideoReader:
         cmd = ["ffmpeg", "-ss", str(ts), "-i", self.video_path, "-frames:v", "1", "-q:v", "2", "-y", output_path,
                "-hide_banner", "-loglevel", "error"]
         try:
-            subprocess.run(cmd, check=True)
+            run_ffmpeg(cmd[1:], timeout=60)
+            if not os.path.isfile(output_path) or os.path.getsize(output_path) == 0:
+                return None
             return output_path
-        except subprocess.CalledProcessError:
+        except MediaToolError as exc:
+            logger.warning("提取视频帧失败（%s 秒）：%s", ts, exc)
             return None
 
     def extract_frames(self, max_frames=1000) -> list[str]:
 
         try:
             os.makedirs(self.frame_dir, exist_ok=True)
-            duration = float(ffmpeg.probe(self.video_path)["format"]["duration"])
+            duration = float(probe_media(self.video_path)["format"]["duration"])
             timestamps = [i for i in range(0, int(duration), self.frame_interval)][:max_frames]
+            if not timestamps:
+                return []
 
             # 并行提取帧
             max_workers = min(os.cpu_count() or 4, 8, len(timestamps))
@@ -102,7 +106,7 @@ class VideoReader:
             return image_paths
         except Exception as e:
             logger.error(f"分割帧发生错误：{str(e)}")
-            raise ValueError("视频处理失败")
+            raise ValueError(f"视频处理失败：{e}") from e
 
     def group_images(self) -> list[list[str]]:
         image_files = [os.path.join(self.frame_dir, f) for f in os.listdir(self.frame_dir) if

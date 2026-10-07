@@ -2,7 +2,8 @@ import request from '@/utils/request'
 
 export interface SysHealth {
   backend: 'ok' | 'error'
-  ffmpeg: 'ok' | 'missing'
+  ffmpeg: 'ok' | 'missing' | 'error'
+  ffmpeg_details?: MediaToolsStatus
   db: 'ok' | 'error'
   whisper_model: {
     /** 当前选中的模型 size，例如 'tiny' / 'base' / 'large-v3' */
@@ -24,6 +25,16 @@ export const getSysHealth = async (): Promise<SysHealth> => {
 /** 保留旧 systemCheck 函数名（App.tsx 启动时仍调用），返回值同 getSysHealth。 */
 export const systemCheck = getSysHealth
 
+export interface MediaToolsStatus {
+  available: boolean
+  status?: 'ok' | 'missing' | 'error'
+  path?: string | null
+  version?: string | null
+  ffprobe_available?: boolean
+  ffprobe_path?: string | null
+  error?: string | null
+}
+
 export interface DeployStatus {
   backend: {
     status: string
@@ -42,9 +53,7 @@ export interface DeployStatus {
     /** 新增：模型是否已完整下载（fast-whisper 看 model.bin / mlx 看 config.json） */
     downloaded: boolean
   }
-  ffmpeg: {
-    available: boolean
-  }
+  ffmpeg: MediaToolsStatus
 }
 
 export const getDeployStatus = async (): Promise<DeployStatus> => {

@@ -73,6 +73,7 @@ def _load_youtube_downloader():
     )
     _stub("app.utils.path_helper", get_data_dir=lambda: "/tmp")
     _stub("app.utils.url_parser", extract_video_id=lambda url, platform: "vid")
+    _stub("ffmpeg_helper", with_ffmpeg_location=lambda options: options)
 
     spec = importlib.util.spec_from_file_location("youtube_downloader", MODULE_PATH)
     if spec is None or spec.loader is None:

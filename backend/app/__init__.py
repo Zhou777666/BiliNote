@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from typing import TYPE_CHECKING
 
-from .routers import note, provider, model, config, chat
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
-
-
-def create_app(lifespan) -> FastAPI:
+def create_app(lifespan) -> "FastAPI":
+    # Import API dependencies only when starting the server. Media self-tests
+    # must not initialize databases, providers or transcription engines.
+    from fastapi import FastAPI
+    from .routers import note, provider, model, config, chat
     app = FastAPI(title="BiliNote",lifespan=lifespan)
     app.include_router(note.router, prefix="/api")
     app.include_router(provider.router, prefix="/api")

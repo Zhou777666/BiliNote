@@ -1,5 +1,5 @@
 import os
-import subprocess
+from ffmpeg_helper import run_ffmpeg
 from abc import ABC
 from typing import Union, Optional
 
@@ -63,12 +63,7 @@ class KuaiShouDownloader(Downloader, ABC):
             raise Exception(f"视频下载失败: {resp.status_code}")
 
         # 使用 ffmpeg 转换为 mp3
-        try:
-            subprocess.run([
-                "ffmpeg", "-y", "-i", mp4_path, "-vn", "-acodec", "libmp3lame", mp3_path
-            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            raise Exception("ffmpeg 转换 MP3 失败")
+        run_ffmpeg(["-y", "-i", mp4_path, "-vn", "-acodec", "libmp3lame", mp3_path])
 
         return AudioDownloadResult(
             file_path=mp3_path,

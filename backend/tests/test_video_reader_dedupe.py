@@ -34,6 +34,10 @@ def _install_stubs():
 
     path_helper_mod = types.ModuleType("app.utils.path_helper")
     ffmpeg_mod = types.ModuleType("ffmpeg")
+    media_mod = types.ModuleType("ffmpeg_helper")
+    media_mod.run_ffmpeg = lambda *_args, **_kwargs: None
+    media_mod.probe_media = lambda *_args, **_kwargs: {"format": {"duration": "0"}}
+    media_mod.MediaToolError = RuntimeError
 
     pil_mod = types.ModuleType("PIL")
     pil_image_mod = types.ModuleType("PIL.Image")
@@ -74,6 +78,7 @@ def _install_stubs():
     sys.modules["PIL.ImageDraw"] = pil_draw_mod
     sys.modules["PIL.ImageFont"] = pil_font_mod
     sys.modules["ffmpeg"] = ffmpeg_mod
+    sys.modules["ffmpeg_helper"] = media_mod
     sys.modules["app.utils.logger"] = logger_mod
     sys.modules["app.utils.path_helper"] = path_helper_mod
 
@@ -95,7 +100,7 @@ VideoReader = video_reader_module.VideoReader
 
 
 def _make_fake_ffmpeg_runner(colors_by_second):
-    def _runner(cmd, check=True):
+    def _runner(cmd, **kwargs):
         output_path = next((arg for arg in cmd if isinstance(arg, str) and arg.endswith(".jpg")), None)
         if output_path is None:
             raise AssertionError("Output path not found in ffmpeg cmd")
@@ -130,8 +135,8 @@ class TestVideoReaderDeduplicateFrames(unittest.TestCase):
                 3: b"frame-b",
             }
 
-            with patch.object(video_reader_module.ffmpeg, "probe", return_value={"format": {"duration": "4"}}), \
-                    patch.object(video_reader_module.subprocess, "run", side_effect=_make_fake_ffmpeg_runner(fake_colors)):
+            with patch.object(video_reader_module, "probe_media", return_value={"format": {"duration": "4"}}), \
+                    patch.object(video_reader_module, "run_ffmpeg", side_effect=_make_fake_ffmpeg_runner(fake_colors)):
                 paths = reader.extract_frames(max_frames=10)
 
             names = [pathlib.Path(p).name for p in paths]

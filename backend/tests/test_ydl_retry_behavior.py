@@ -50,6 +50,7 @@ def _load_downloader_module(monkeypatch):
     )
     _stub(monkeypatch, "app.utils.path_helper", get_data_dir=lambda: "/tmp")
     _stub(monkeypatch, "app.utils.url_parser", extract_video_id=lambda url, platform: "video-id")
+    _stub(monkeypatch, "ffmpeg_helper", with_ffmpeg_location=lambda options: {**options, "ffmpeg_location": "/media-tools"})
 
     spec = importlib.util.spec_from_file_location("youtube_downloader_under_test", MODULE_PATH)
     module = importlib.util.module_from_spec(spec)
@@ -92,6 +93,7 @@ def test_audio_download_configures_a_nonzero_retry_budget(tmp_path, monkeypatch)
         module.yt_dlp.YoutubeDL = original_youtube_dl
 
     options = _CapturingYoutubeDL.options
+    assert options["ffmpeg_location"] == "/media-tools"
     assert options["retries"] > 0
     assert options["fragment_retries"] > 0
     assert options["socket_timeout"] > 0
