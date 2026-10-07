@@ -23,7 +23,7 @@ pnpm test:health
 pnpm tauri build --bundles nsis
 ```
 
-Windows 构建会下载固定 FFmpeg 包、校验 SHA256，并在移除系统工具 PATH 的环境里对打包后的后端执行自检，验证内置 FFprobe、MP3 转码、截图及中文/空格文件名。`workflow_dispatch` 可先构建测试产物，推送 `v*` tag 会触发现有 Release 流程。
+Windows 构建会下载固定 FFmpeg 包、校验 SHA256，并在移除系统工具 PATH 的环境里对打包后的后端执行自检，验证内置 FFprobe、MP3 转码、截图及中文/空格文件名。推送 `fix/windows-ffmpeg-stability` 分支会自动构建测试产物，也可使用 `workflow_dispatch` 手动构建；这两种方式均不发布 Release。推送 `v*` tag 会触发现有 Release 流程。
 
 在仓库根目录执行安装（先退出正在运行的 BiliNote）：
 
