@@ -29,7 +29,8 @@
       "bin/BiliNoteBackend/BiliNoteBackend"
     ],
     "resources": {
-    "bin/BiliNoteBackend/_internal":"_internal"
+    "bin/BiliNoteBackend/_internal":"_internal",
+    "windows/TAURI-NOTICE.txt":"_internal/licenses/tauri-installer/TAURI-NOTICE.txt"
     },
     "macOS":{
       "files": {
@@ -38,7 +39,7 @@
     },
     "windows": {
       "nsis": {
-        "installerHooks": "windows/installer-hooks.nsh"
+        "template": "windows/installer.nsi"
       }
     },
     "active": true,

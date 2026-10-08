@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:health": "node scripts/test-health.mjs",
+    "test:installer": "node scripts/test-installer-template.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

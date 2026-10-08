@@ -74,9 +74,11 @@ jobs:
         working-directory: BillNote_frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Test health status rendering
+      - name: Test health status rendering and installer template
         working-directory: BillNote_frontend
-        run: pnpm test:health
+        run: |
+          pnpm test:health
+          pnpm test:installer
 
       # Cargo 缓存
       - name: Cache Cargo

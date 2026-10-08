@@ -14,7 +14,7 @@ Windows 包同时内置 CTranslate2 所需 cuBLAS 12.4.5.8、cuDNN 9.1.0.70、NV
 
 安装后在「设置 → 音频转写配置」选择本地 Whisper（fast-whisper），先下载 tiny/base 做验证，再按精度需求选择 small 等模型。首次下载需要网络，完整缓存模型后的转写不访问在线转写平台。视频下载和在线大模型总结仍需网络；这不是整个笔记流程的离线模式。本地自定义模型需包含 model.bin、config.json、tokenizer.json 及模型词表。加载错误不自动删除缓存；模型不完整时请在设置中重新下载补齐。
 
-GPU 运行库未压缩体积约 1.6 GB，Windows 安装包比 2.4.6 增大。Windows CI 只生成 NSIS `_x64-setup.exe` 安装包，减少重复构建 MSI 的空间占用。`windows/installer-hooks.nsh` 将 Tauri 默认整块（SOLID）压缩改为逐文件 LZMA，避免总资源超过 2 GiB 时 NSIS 的内存映射错误；仍保留压缩和完整 CUDA 库。CUDA DLL 及 NVIDIA 许可证在安装包内部随应用分发。
+GPU 运行库未压缩体积约 1.6 GB，Windows 安装包比 2.4.6 增大。Windows CI 只生成 NSIS `_x64-setup.exe` 安装包，减少重复构建 MSI 的空间占用。`windows/installer.nsi` 基于锁定的 Tauri CLI 2.10.1 官方模板，仅将最前面的整块（SOLID）压缩改为逐文件压缩，避免总资源超过 2 GiB 时 NSIS 的内存映射错误；不能在 installerHooks 中更改压缩方式，因为此前的 StrFunc 已修改安装程序头部。仍保留完整 CUDA 库及原安装、升级、卸载逻辑。更新 CLI / lockfile 时需对照同版本上游模板同步；来源和 MIT 许可证见 `windows/TAURI-NOTICE.txt`。CUDA DLL 及 NVIDIA 许可证在安装包内部随应用分发。
 
 构建要求 Python 3.11、Node.js 20、pnpm 9.15.0、Rust 和 Windows MSVC 构建工具。构建脚本只暂存 `.env.example`，不覆盖或删除开发者 `.env`。
 
@@ -27,6 +27,7 @@ python backend/build_backend.py --target x86_64-pc-windows-msvc
 cd BillNote_frontend
 pnpm install --frozen-lockfile
 pnpm test:health
+pnpm test:installer
 pnpm tauri build --bundles nsis
 ```
 
