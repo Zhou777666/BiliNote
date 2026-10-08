@@ -36,6 +36,11 @@
                "Frameworks": "bin/BiliNoteBackend/_internal"
       }
     },
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/installer-hooks.nsh"
+      }
+    },
     "active": true,
     "targets": "all",
     "icon": [
