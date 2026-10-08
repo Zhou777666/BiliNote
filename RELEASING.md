@@ -6,16 +6,23 @@
 
 ## 流程总览
 
-### 本 fork 的 Windows 2.4.6 首版
+### 本 fork 的 Windows 2.4.7 修复版
 
 Windows 安装包内置固定版本 9.0.2 的 FFmpeg 和 FFprobe。工具查找顺序为 `FFMPEG_BIN_PATH` 指定目录、安装包 `_internal/tools/ffmpeg`、系统 PATH。已有安装如果指定了系统工具路径，会继续优先使用该配置；希望使用内置版本时清空 `FFMPEG_BIN_PATH`。
+
+Windows 包同时内置 CTranslate2 所需 cuBLAS 12.4.5.8、cuDNN 9.1.0.70、NVRTC 12.4.127，不依赖 PyTorch 或系统 CUDA Toolkit；仍需机器安装兼容的 NVIDIA 显卡驱动。GPU 初始化或实际转写出现 CUDA 错误时，会保留模型缓存并回退 CPU。部署监控的 GPU「可用」表示本地引擎具备 GPU 条件，并不代表在线转写引擎正在使用 GPU。
+
+安装后在「设置 → 音频转写配置」选择本地 Whisper（fast-whisper），先下载 tiny/base 做验证，再按精度需求选择 small 等模型。首次下载需要网络，完整缓存模型后的转写不访问在线转写平台。视频下载和在线大模型总结仍需网络；这不是整个笔记流程的离线模式。本地自定义模型需包含 model.bin、config.json、tokenizer.json 及模型词表。加载错误不自动删除缓存；模型不完整时请在设置中重新下载补齐。
+
+GPU 运行库未压缩体积约 1.6 GB，Windows 安装包比 2.4.6 增大。Windows CI 只生成 NSIS `_x64-setup.exe` 安装包，减少重复构建 MSI 的空间占用。CUDA DLL 及 NVIDIA 许可证在安装包内部随应用分发。
 
 构建要求 Python 3.11、Node.js 20、pnpm 9.15.0、Rust 和 Windows MSVC 构建工具。构建脚本只暂存 `.env.example`，不覆盖或删除开发者 `.env`。
 
 ```powershell
 python -m pip install -r backend/requirements.txt
+python -m pip install -r backend/requirements-windows-gpu.txt
 python -m pip install pytest
-python -m pytest backend/tests/test_ffmpeg_helper.py backend/tests/test_media_tools_integration.py
+python -m pytest backend/tests/test_ffmpeg_helper.py backend/tests/test_media_tools_integration.py backend/tests/test_cuda_runtime.py backend/tests/test_whisper_runtime.py backend/tests/test_note_progress.py
 python backend/build_backend.py --target x86_64-pc-windows-msvc
 cd BillNote_frontend
 pnpm install --frozen-lockfile
@@ -28,7 +35,7 @@ Windows 构建会下载固定 FFmpeg 包、校验 SHA256，并在移除系统工
 在仓库根目录执行安装（先退出正在运行的 BiliNote）：
 
 ```powershell
-./scripts/install-windows.ps1 -Installer './BillNote_frontend/src-tauri/target/release/bundle/nsis/BiliNote_2.4.6_x64-setup.exe'
+./scripts/install-windows.ps1 -Installer './BillNote_frontend/src-tauri/target/release/bundle/nsis/BiliNote_2.4.7_x64-setup.exe'
 ```
 
 默认传入 `/D=E:\Tool\Bilinote`，可用 `-Destination` 覆盖；脚本不自动卸载或清理已有数据。覆盖升级前备份原安装目录中的数据库、`config`、`.env`、笔记和上传文件，首版先在独立测试目录验证升级。

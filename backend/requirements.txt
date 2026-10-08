@@ -25,6 +25,9 @@ colorama==0.4.6
 coloredlogs==15.0.1
 cssselect2==0.8.0
 ctranslate2==4.6.0
+# CTranslate2 4.6 on Windows imports pkg_resources, removed by newer setuptools.
+setuptools==80.9.0
+backports.tarfile==1.2.0; python_version < "3.12"
 distro==1.9.0
 dnspython==2.7.0
 email_validator==2.2.0

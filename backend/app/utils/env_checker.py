@@ -1,9 +1,6 @@
 def is_cuda_available() -> bool:
-    try:
-        import torch
-        return torch.cuda.is_available()
-    except ImportError:
-        return False
+    from app.utils.cuda_runtime import get_cuda_status
+    return get_cuda_status()["available"]
 def is_torch_installed() -> bool:
     try:
         import torch

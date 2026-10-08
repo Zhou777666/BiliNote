@@ -136,7 +136,7 @@ export default function Monitor() {
                                 <Cpu className="mr-2 inline h-5 w-5 text-green-500" />
                                 CUDA GPU
                             </CardTitle>
-                            {status && <StatusBadge ok={status.cuda.available} label={status.cuda.available ? '已启用' : '未启用'} />}
+                            {status && <StatusBadge ok={status.cuda.available} label={status.cuda.available ? '可用' : '不可用'} />}
                         </CardHeader>
                         <CardContent>
                             {loading && !status ? (
@@ -153,13 +153,24 @@ export default function Monitor() {
                                                 <span className="font-medium">{status.cuda.gpu_name}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">CUDA 版本:</span>
+                                                <span className="text-muted-foreground">运行库:</span>
                                                 <span className="font-mono">{status.cuda.version}</span>
+                                            </div>
+                                            {status.cuda.driver_cuda_version && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">驱动支持 CUDA:</span>
+                                                    <span>{status.cuda.driver_cuda_version}</span>
+                                                </div>
+                                            )}
+                                            <div className="text-muted-foreground">
+                                                {status.whisper.transcriber_type === 'fast-whisper'
+                                                    ? '本地 Whisper 将优先使用 GPU，运行失败时回退 CPU。'
+                                                    : '当前转写引擎不使用此 CUDA GPU；切换到本地 Whisper 可启用。'}
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="text-muted-foreground">
-                                            CUDA 不可用，将使用 CPU 模式
+                                        <div className="text-muted-foreground break-words">
+                                            {status.cuda.reason || '未检测到可用 CUDA，本地 Whisper 将使用 CPU。'}
                                         </div>
                                     )}
                                 </div>

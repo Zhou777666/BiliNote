@@ -13,6 +13,7 @@ from app.services.cookie_manager import CookieConfigManager
 from app.services.transcriber_config_manager import TranscriberConfigManager
 from app.transcriber import model_download_state as dl_state
 from ffmpeg_helper import get_media_tools_status
+from app.utils.cuda_runtime import get_cuda_status
 
 logger = get_logger(__name__)
 
@@ -158,7 +159,7 @@ def _check_whisper_model_exists(model_size: str, subdir: str = "whisper") -> boo
     """检查指定 whisper 模型是否已下载完整到本地。
 
     先把模型名 resolve 成可加载标识，再按类型判定：
-      - 本地路径模型 → 直接看该目录下有没有 model.bin
+      - 本地路径模型 → 检查 model.bin、config.json、tokenizer.json 是否完整
       - HF repo_id → 看 HF cache 布局
         <model_dir>/models--{org}--{name}/snapshots/<hash>/model.bin
         （历史 modelscope 布局 <model_dir>/whisper-{size}/model.bin 也兼容识别）
@@ -167,24 +168,25 @@ def _check_whisper_model_exists(model_size: str, subdir: str = "whisper") -> boo
         resolve_whisper_model,
         is_local_target,
         hf_cache_dirname,
+        whisper_model_files_missing,
     )
     try:
         target = resolve_whisper_model(model_size)
     except Exception:
         return False
     if is_local_target(target):
-        return (Path(target) / "model.bin").exists()
+        return not whisper_model_files_missing(target)
 
     model_dir = Path(get_model_dir(subdir))
     # HF cache 布局（适配任意 org/repo，不再写死 Systran）
     hf_repo_dir = model_dir / hf_cache_dirname(target) / "snapshots"
     if hf_repo_dir.exists():
         for snapshot in hf_repo_dir.iterdir():
-            if (snapshot / "model.bin").exists():
+            if not whisper_model_files_missing(snapshot):
                 return True
     # 历史 modelscope 布局（向后兼容老用户）
-    legacy = model_dir / f"whisper-{model_size}" / "model.bin"
-    return legacy.exists()
+    legacy = model_dir / f"whisper-{model_size}"
+    return not whisper_model_files_missing(legacy)
 
 
 def _check_mlx_whisper_model_exists(model_size: str) -> bool:
@@ -299,12 +301,13 @@ def _do_download_whisper(model_size: str):
 
         target = resolve_whisper_model(model_size)
         if is_local_target(target):
-            # 本地模型不下载，只校验 model.bin 是否就位
-            ok = (Path(target) / "model.bin").exists()
+            from app.transcriber.whisper_models import whisper_model_files_missing
+            missing = whisper_model_files_missing(target)
+            ok = not missing
             if ok:
                 dl_state.mark_done(model_size)
             else:
-                msg = f"本地模型路径 {target} 下没有 model.bin，无法使用"
+                msg = f"本地模型路径 {target} 缺少 {', '.join(missing)}，无法离线使用"
                 logger.warning(f"本地模型 {model_size}：{msg}")
                 dl_state.mark_failed(model_size, msg)
             return
@@ -453,29 +456,11 @@ async def sys_check():
 async def deploy_status():
     """返回部署监控所需的所有状态信息。
 
-    所有子项都用 try 包起来——监控页本身不应该被任何一个子项打死。
-    特别是 torch：它只在 fast-whisper 路径用得到，用 Groq / 必剪 / 快手在线
-    引擎的轻量部署完全可以不装，那种情况这个 endpoint 不应该 500。
+    CUDA 按实际使用的 CTranslate2 引擎和运行库检测，不依赖 PyTorch。
     """
     import os
 
-    # CUDA 状态
-    try:
-        import torch
-        cuda_available = torch.cuda.is_available()
-        cuda_info = {
-            "available": cuda_available,
-            "torch_installed": True,
-            "version": torch.version.cuda if cuda_available else None,
-            "gpu_name": torch.cuda.get_device_name(0) if cuda_available else None,
-        }
-    except Exception:
-        cuda_info = {
-            "available": False,
-            "torch_installed": False,
-            "version": None,
-            "gpu_name": None,
-        }
+    cuda_info = get_cuda_status()
 
     # Whisper 模型 / 转写器配置 + 本地下载状态
     try:

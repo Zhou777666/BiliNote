@@ -1,0 +1,4 @@
+# Windows CUDA 12.4 / cuDNN 9 runtime used by CTranslate2 (no PyTorch required).
+nvidia-cublas-cu12==12.4.5.8
+nvidia-cudnn-cu12==9.1.0.70
+nvidia-cuda-nvrtc-cu12==12.4.127

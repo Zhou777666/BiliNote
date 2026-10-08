@@ -6,6 +6,10 @@ if __name__ == "__main__" and "--media-self-test" in sys.argv:
     from media_self_test import run
     run()
     raise SystemExit(0)
+if __name__ == "__main__" and "--cuda-runtime-self-test" in sys.argv:
+    from cuda_self_test import run
+    run()
+    raise SystemExit(0)
 from contextlib import asynccontextmanager
 
 import uvicorn

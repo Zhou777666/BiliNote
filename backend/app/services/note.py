@@ -71,7 +71,7 @@ class NoteGenerator:
         self.model_size: str = config_manager.get_whisper_model_size()
         self.device: Optional[str] = None
         self.transcriber_type: str = config_manager.get_transcriber_type()
-        self.transcriber: Transcriber = self._init_transcriber()
+        self.transcriber: Optional[Transcriber] = None
         self.video_path: Optional[Path] = None
         self.video_img_urls=[]
         logger.info("NoteGenerator 初始化完成")
@@ -393,7 +393,7 @@ class NoteGenerator:
         :param grid_size: 缩略图网格尺寸
         :return: AudioDownloadResult 对象
         """
-        task_id = audio_cache_file.stem.split("_")[0]
+        task_id = audio_cache_file.stem.removesuffix("_audio")
         self._update_status(task_id, status_phase)
 
         # 已有缓存，尝试加载
@@ -543,7 +543,7 @@ class NoteGenerator:
         :param status_phase: 对应的状态枚举，如 TaskStatus.TRANSCRIBING
         :return: TranscriptResult 对象
         """
-        task_id = transcript_cache_file.stem.split("_")[0]
+        task_id = transcript_cache_file.stem.removesuffix("_transcript")
         self._update_status(task_id, status_phase)
 
         # 已有缓存，尝试加载
@@ -559,6 +559,8 @@ class NoteGenerator:
         # 调用转写器
         try:
             logger.info("开始转写音频")
+            if self.transcriber is None:
+                self.transcriber = self._init_transcriber()
             transcript = self.transcriber.transcript(file_path=audio_file)
             transcript_cache_file.write_text(json.dumps(asdict(transcript), ensure_ascii=False, indent=2), encoding="utf-8")
             logger.info(f"转写并缓存成功 ({transcript_cache_file})")
@@ -595,7 +597,7 @@ class NoteGenerator:
         :param extras: GPT 额外参数
         :return: 生成的 Markdown 字符串
         """
-        task_id = markdown_cache_file.stem
+        task_id = markdown_cache_file.stem.removesuffix("_markdown")
         self._update_status(task_id, TaskStatus.SUMMARIZING)
 
         source = GPTSource(
@@ -608,7 +610,7 @@ class NoteGenerator:
             _format=formats,
             style=style,
             extras=extras,
-            checkpoint_key=task_id,
+            checkpoint_key=markdown_cache_file.stem,
         )
 
         try:

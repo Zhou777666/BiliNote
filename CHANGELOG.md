@@ -2,10 +2,14 @@
 
 本项目所有重要变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased] - Windows 2.4.6 修复版
+## [Unreleased] - Windows 2.4.7 修复版
 
 ### Fixed
 
+- 总结阶段更新真实任务状态文件，修复进度停留在转写阶段的问题；保留含下划线的完整任务 ID。
+- 本地 Whisper 与部署监控统一通过 CTranslate2 检测 CUDA，不再要求 PyTorch。
+- 模型优先从本地缓存加载；CUDA 加载或转写失败时使用同一模型回退 CPU，保留缓存，不再因 GPU 故障删模型重下载。
+- 本地转写错误向上传递，避免返回空结果掩盖原始错误。
 - 健康检查不再反复追加 PATH，修复长时间运行后 FFmpeg 突然无法启动的问题。
 - 下载、转码、压缩、截图统一解析 FFmpeg / FFprobe 绝对路径，保留退出码和错误输出，截图失败不再返回无效图片路径。
 - 桌面健康指示器读取接口中的依赖状态，HTTP 200 不再掩盖 FFmpeg 或数据库故障。
@@ -13,6 +17,8 @@
 
 ### Added
 
+- Windows 包包含固定版本 CUDA 12.4 cuBLAS、cuDNN 9.1、NVRTC 及 NVIDIA 许可证；构建后校验运行库加载。
+- GPU 不可用原因和驱动支持信息；离线 GPU 实测及状态、CPU 回退回归覆盖。
 - 媒体工具路径、版本、故障详情，300 次健康检查回归及离线媒体自检。
 - 安装脚本默认目标 E:\Tool\Bilinote，保留交互式安装向导。
 

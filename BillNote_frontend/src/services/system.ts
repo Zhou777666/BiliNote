@@ -42,8 +42,11 @@ export interface DeployStatus {
   }
   cuda: {
     available: boolean
-    /** 新增：torch 是否安装。轻量部署没装 torch 时为 false，避免误判为 CUDA 故障 */
-    torch_installed?: boolean
+    backend?: string
+    reason?: string | null
+    device_count?: number
+    driver_cuda_version?: string
+    compute_types?: string[]
     version: string | null
     gpu_name: string | null
   }

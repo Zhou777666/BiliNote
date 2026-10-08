@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "BiliNote",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "identifier": "com.jefferyhuang.bilinote",
   "build": {
     "frontendDist": "../dist",

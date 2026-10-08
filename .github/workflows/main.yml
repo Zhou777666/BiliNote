@@ -33,7 +33,9 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-windows-gpu.txt
 
       # 安装 Python 依赖并执行构建
       - name: Install Python dependencies & Build backend
@@ -41,8 +43,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pip install -r backend/requirements-windows-gpu.txt
+          fi
           pip install pytest
-          python -m pytest backend/tests/test_ffmpeg_helper.py backend/tests/test_media_tools_integration.py backend/tests/test_build_backend.py
+          python -m pytest backend/tests/test_ffmpeg_helper.py backend/tests/test_media_tools_integration.py backend/tests/test_build_backend.py backend/tests/test_cuda_runtime.py backend/tests/test_whisper_runtime.py backend/tests/test_note_progress.py backend/tests/test_transcriber_provider_model_selection.py backend/tests/test_whisper_models.py -q
 
           if [ "$RUNNER_OS" = "Windows" ]; then
             python backend/build_backend.py --target x86_64-pc-windows-msvc
@@ -102,7 +107,13 @@ jobs:
       # 打包 Tauri 应用
       - name: Build Tauri App
         working-directory: BillNote_frontend
-        run: pnpm tauri build
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pnpm tauri build --bundles nsis
+          else
+            pnpm tauri build
+          fi
 
       # 收集产物到统一目录
       - name: Collect release artifacts

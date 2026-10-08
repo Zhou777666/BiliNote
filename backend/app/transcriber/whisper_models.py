@@ -61,6 +61,14 @@ def hf_cache_dirname(repo_id: str) -> str:
     return "models--" + repo_id.replace("/", "--")
 
 
+def whisper_model_files_missing(model_path) -> List[str]:
+    """Files needed to load a model without fetching a tokenizer online."""
+    directory = Path(model_path).expanduser()
+    missing = [name for name in ("model.bin", "config.json", "tokenizer.json")
+               if not (directory / name).is_file() or (directory / name).stat().st_size == 0]
+    return missing
+
+
 class WhisperModelRegistry:
     """内置 + 用户自定义的 whisper 模型映射，自定义部分持久化到 JSON。"""
 
